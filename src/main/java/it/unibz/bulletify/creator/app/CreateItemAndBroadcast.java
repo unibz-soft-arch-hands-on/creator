@@ -1,5 +1,7 @@
 package it.unibz.bulletify.creator.app;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.unibz.bulletify.creator.CreatorApplication;
 import it.unibz.bulletify.creator.core.CreateItem;
 import it.unibz.bulletify.creator.core.Item;
@@ -11,11 +13,13 @@ import org.springframework.stereotype.Service;
 public class CreateItemAndBroadcast {
     private CreateItem createItem;
     private RabbitTemplate template;
+    private ObjectMapper objectMapper;
 
     @Autowired
-    public CreateItemAndBroadcast(CreateItem createItem, RabbitTemplate template) {
+    public CreateItemAndBroadcast(CreateItem createItem, RabbitTemplate template, ObjectMapper objectMapper) {
         this.createItem = createItem;
         this.template = template;
+        this.objectMapper = objectMapper;
     }
 
     public Item createAndBroadcast(CreateItemFormDTO requestBody) {
@@ -35,10 +39,15 @@ public class CreateItemAndBroadcast {
     }
 
     private String toJson(Item item) {
-        return "{" +
-                    "\"id\":\"" + item.getId() + "\"," +
-                    "\"name\":\"" + item.getName() + "\"," +
-                    "\"category\":\"" + item.getCategory() + "\"" +
-                "}";
+        try {
+             return this.objectMapper.writeValueAsString(item);
+        } catch (JsonProcessingException e) {
+            System.out.println(e.getMessage());
+            return "{" +
+                        "\"id\":\"" + item.getId() + "\"," +
+                        "\"name\":\"" + item.getName() + "\"," +
+                        "\"category\":\"" + item.getCategory() + "\"" +
+                    "}";
+        }
     }
 }
